@@ -374,9 +374,12 @@ class Game {
 
     this.board[pt.from.row][pt.from.col] = null;
     if (winnerSeat === pt.attackerSeat) {
+      // Die Figur wird zu dem Typ, mit dem im Stechen gewonnen wurde (ICQ-Regel)
+      attackerPiece.type = choiceA;
       attackerPiece.revealed = true;
       this.board[pt.to.row][pt.to.col] = attackerPiece;
     } else {
+      defenderPiece.type = choiceB;
       defenderPiece.revealed = true;
       this.board[pt.to.row][pt.to.col] = defenderPiece;
     }
