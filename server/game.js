@@ -45,6 +45,7 @@ class Game {
     this.winReason = null;
     this.lastMove = null; // { id, from, to, seat, outcome } fuer UI-Meldungen/Animationen
     this.moveCounter = 0;
+    this.pendingTiebreak = null; // Stichkampf bei Gleichstand, siehe resolveCombat/move
     this.lastActivity = Date.now();
   }
 
@@ -220,9 +221,21 @@ class Game {
     return { outcome: 'defenderWins', attackerSurvives: false, defenderSurvives: true };
   }
 
+  _advanceTurn(seat) {
+    const nextSeat = otherSeat(seat);
+    if (!this.seatHasAnyMove(nextSeat)) {
+      this.phase = 'finished';
+      this.winner = seat;
+      this.winReason = 'stalemate';
+    } else {
+      this.turn = nextSeat;
+    }
+  }
+
   move(seat, from, to) {
     this.touch();
     if (this.phase !== 'playing') return { ok: false, error: 'Das Spiel laeuft nicht.' };
+    if (this.pendingTiebreak) return { ok: false, error: 'Bitte zuerst den Stichkampf entscheiden.' };
     if (this.turn !== seat) return { ok: false, error: 'Du bist nicht am Zug.' };
     if (!from || !to || !inBounds(from.row, from.col) || !inBounds(to.row, to.col)) {
       return { ok: false, error: 'Ungueltige Koordinaten.' };
@@ -257,6 +270,31 @@ class Game {
       revealedDefenderType = target.type;
       revealedAttackerType = piece.type;
 
+      if (result.outcome === 'draw') {
+        // Stichkampf: beide Figuren bleiben vorerst stehen, Spieler waehlen
+        // verdeckt noch einmal Stein/Schere/Papier; der Sieger behaelt seine Figur.
+        this.pendingTiebreak = {
+          from,
+          to,
+          attackerSeat: seat,
+          defenderSeat: otherSeat(seat),
+          type: piece.type,
+          round: 1,
+          choices: { [seat]: null, [otherSeat(seat)]: null },
+        };
+        this.moveCounter += 1;
+        this.lastMove = {
+          id: this.moveCounter,
+          seat,
+          from,
+          to,
+          outcome: 'drawPending',
+          attackerType: revealedAttackerType,
+          defenderType: revealedDefenderType,
+        };
+        return { ok: true };
+      }
+
       this.board[from.row][from.col] = null;
 
       if (result.outcome === 'flagCaptured') {
@@ -267,8 +305,6 @@ class Game {
         this.winReason = 'flag';
       } else if (result.outcome === 'trap') {
         this.board[to.row][to.col] = null; // Falle und Angreifer beide vernichtet
-      } else if (result.outcome === 'draw') {
-        this.board[to.row][to.col] = null; // beide vernichtet
       } else if (result.attackerSurvives) {
         piece.revealed = true;
         this.board[to.row][to.col] = piece;
@@ -293,15 +329,75 @@ class Game {
       return { ok: true };
     }
 
-    // Zugwechsel + Pattsituation pruefen
-    const nextSeat = otherSeat(seat);
-    if (!this.seatHasAnyMove(nextSeat)) {
-      this.phase = 'finished';
-      this.winner = seat;
-      this.winReason = 'stalemate';
-    } else {
-      this.turn = nextSeat;
+    this._advanceTurn(seat);
+    return { ok: true };
+  }
+
+  // Stichkampf bei Gleichstand: beide Beteiligten waehlen verdeckt Stein/Schere/Papier.
+  submitTiebreakChoice(seat, choice) {
+    this.touch();
+    const pt = this.pendingTiebreak;
+    if (!pt) return { ok: false, error: 'Kein Stichkampf aktiv.' };
+    if (seat !== pt.attackerSeat && seat !== pt.defenderSeat) {
+      return { ok: false, error: 'Du bist an diesem Stichkampf nicht beteiligt.' };
     }
+    if (!MOBILE_TYPES.has(choice)) {
+      return { ok: false, error: 'Ungueltige Wahl.' };
+    }
+    if (pt.choices[seat] !== null) {
+      return { ok: false, error: 'Du hast bereits gewaehlt.' };
+    }
+
+    pt.choices[seat] = choice;
+
+    const otherS = seat === pt.attackerSeat ? pt.defenderSeat : pt.attackerSeat;
+    if (pt.choices[otherS] === null) {
+      return { ok: true }; // noch nicht beide gewaehlt
+    }
+
+    const choiceA = pt.choices[pt.attackerSeat];
+    const choiceB = pt.choices[pt.defenderSeat];
+
+    if (choiceA === choiceB) {
+      // Wieder Gleichstand -> naechste Runde, neu waehlen
+      pt.round += 1;
+      pt.choices[pt.attackerSeat] = null;
+      pt.choices[pt.defenderSeat] = null;
+      return { ok: true };
+    }
+
+    const attackerPieceWins = beats(choiceA, choiceB);
+    const winnerSeat = attackerPieceWins ? pt.attackerSeat : pt.defenderSeat;
+
+    const attackerPiece = this.board[pt.from.row][pt.from.col];
+    const defenderPiece = this.board[pt.to.row][pt.to.col];
+
+    this.board[pt.from.row][pt.from.col] = null;
+    if (winnerSeat === pt.attackerSeat) {
+      attackerPiece.revealed = true;
+      this.board[pt.to.row][pt.to.col] = attackerPiece;
+    } else {
+      defenderPiece.revealed = true;
+      this.board[pt.to.row][pt.to.col] = defenderPiece;
+    }
+
+    this.moveCounter += 1;
+    this.lastMove = {
+      id: this.moveCounter,
+      seat: pt.attackerSeat,
+      from: pt.from,
+      to: pt.to,
+      outcome: 'drawResolved',
+      attackerType: pt.type,
+      defenderType: pt.type,
+      winnerSeat,
+      tiebreakChoiceAttacker: choiceA,
+      tiebreakChoiceDefender: choiceB,
+    };
+
+    const attackerSeat = pt.attackerSeat;
+    this.pendingTiebreak = null;
+    this._advanceTurn(attackerSeat);
 
     return { ok: true };
   }
@@ -318,6 +414,20 @@ class Game {
       })
     );
 
+    let pendingTiebreak = null;
+    if (this.pendingTiebreak) {
+      const pt = this.pendingTiebreak;
+      const opponentSeatOfMine = seat === pt.attackerSeat ? pt.defenderSeat : pt.attackerSeat;
+      pendingTiebreak = {
+        from: pt.from,
+        to: pt.to,
+        type: pt.type,
+        round: pt.round,
+        myChoiceMade: pt.choices[seat] !== null,
+        opponentChoiceMade: pt.choices[opponentSeatOfMine] !== null,
+      };
+    }
+
     return {
       roomCode: this.roomCode,
       seat,
@@ -332,6 +442,7 @@ class Game {
       winner: this.winner,
       winReason: this.winReason,
       lastMove: this.lastMove,
+      pendingTiebreak,
       opponentConnected: !!(this.players[otherSeat(seat)] && this.players[otherSeat(seat)].connected),
       opponentReady: !!(this.players[otherSeat(seat)] && this.players[otherSeat(seat)].ready),
       youReady: !!(this.players[seat] && this.players[seat].ready),

@@ -105,6 +105,17 @@ io.on('connection', (socket) => {
     broadcastState(game);
   });
 
+  socket.on('tiebreakChoice', ({ choice } = {}, ack) => {
+    const info = socketInfo.get(socket.id);
+    if (!info) return;
+    const game = roomManager.getRoom(info.roomCode);
+    if (!game) return;
+    const result = game.submitTiebreakChoice(info.seat, choice);
+    if (typeof ack === 'function') ack(result);
+    if (!result.ok) return;
+    broadcastState(game);
+  });
+
   socket.on('disconnect', () => {
     const info = socketInfo.get(socket.id);
     socketInfo.delete(socket.id);

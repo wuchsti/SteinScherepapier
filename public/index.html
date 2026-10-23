@@ -7,6 +7,80 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+<!-- Eigene Figuren-Icons als SVG-Symbole (einmal definiert, per <use> wiederverwendet) -->
+<svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <defs>
+    <symbol id="pc-base" viewBox="0 0 64 64">
+      <path d="M19,23 L45,23 L52,58 L12,58 Z" fill="var(--body-fill, #4a7fb5)" />
+      <line x1="32" y1="25" x2="32" y2="56" stroke="rgba(0,0,0,0.12)" stroke-width="1.5" />
+      <path d="M20,26 Q14,34 17,44" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="32" cy="15" r="9" fill="var(--body-fill, #4a7fb5)" />
+      <circle cx="28.5" cy="14" r="1.3" fill="#20242a" />
+      <circle cx="35.5" cy="14" r="1.3" fill="#20242a" />
+    </symbol>
+
+    <symbol id="pc-hidden" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q50,34 47,44" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+    </symbol>
+
+    <symbol id="pc-rock" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q52,20 49,10" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="49" cy="9" r="5" fill="var(--body-fill, #4a7fb5)" />
+      <g transform="translate(49,6)">
+        <path d="M-7,-1 L-4,-7 L4,-6 L7,0 L4,6 L-5,6 Z" fill="#9e9e9e" stroke="#6b6b6b" stroke-width="1" />
+      </g>
+    </symbol>
+
+    <symbol id="pc-scissors" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q52,20 49,10" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="49" cy="9" r="5" fill="var(--body-fill, #4a7fb5)" />
+      <g transform="translate(49,6)" stroke="#9aa5ad" stroke-width="2" fill="none">
+        <circle cx="-4" cy="5" r="2.5" fill="#cfd8dc" />
+        <circle cx="4" cy="5" r="2.5" fill="#cfd8dc" />
+        <line x1="-3" y1="3" x2="6" y2="-7" />
+        <line x1="3" y1="3" x2="-6" y2="-7" />
+      </g>
+    </symbol>
+
+    <symbol id="pc-paper" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q52,20 49,10" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="49" cy="9" r="5" fill="var(--body-fill, #4a7fb5)" />
+      <g transform="translate(49,6)">
+        <path d="M-7,-7 L3,-7 L7,-3 L7,7 L-7,7 Z" fill="#fdf6e3" stroke="#c9bfa0" stroke-width="1" />
+        <path d="M3,-7 L3,-3 L7,-3 Z" fill="#e9dfc0" />
+        <line x1="-4" y1="-1" x2="4" y2="-1" stroke="#c9bfa0" stroke-width="1" />
+        <line x1="-4" y1="2" x2="4" y2="2" stroke="#c9bfa0" stroke-width="1" />
+      </g>
+    </symbol>
+
+    <symbol id="pc-flag" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q52,20 49,10" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="49" cy="9" r="5" fill="var(--body-fill, #4a7fb5)" />
+      <g transform="translate(49,6)">
+        <line x1="0" y1="-9" x2="0" y2="9" stroke="#6d4c2f" stroke-width="2" />
+        <path d="M0,-9 L9,-5.5 L0,-2 Z" fill="#e53935" />
+      </g>
+    </symbol>
+
+    <symbol id="pc-trap" viewBox="0 0 64 64">
+      <use href="#pc-base" />
+      <path d="M44,26 Q52,20 49,10" stroke="var(--body-fill, #4a7fb5)" stroke-width="7" stroke-linecap="round" fill="none" />
+      <circle cx="49" cy="9" r="5" fill="var(--body-fill, #4a7fb5)" />
+      <g transform="translate(49,6)">
+        <circle cx="0" cy="2" r="6" fill="#2b2b2b" stroke="#111" stroke-width="1" />
+        <line x1="2" y1="-4" x2="5" y2="-9" stroke="#2b2b2b" stroke-width="2" />
+        <circle cx="6" cy="-10" r="2" fill="#ffb300" />
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
 <header class="app-header">
   <h1>🪨✂️📄 Stein, Schere, Papier <span class="online-tag">Online</span></h1>
 </header>
@@ -65,12 +139,13 @@
       <div class="game-side">
         <div id="turn-indicator" class="turn-indicator"></div>
         <div id="connection-indicator" class="connection-indicator"></div>
+        <div id="piece-tracker" class="piece-tracker"></div>
         <div class="legend">
-          <div><span class="piece-icon">🪨</span> Stein schlägt Schere</div>
-          <div><span class="piece-icon">✂️</span> Schere schlägt Papier</div>
-          <div><span class="piece-icon">📄</span> Papier schlägt Stein</div>
-          <div><span class="piece-icon">🚩</span> Fahne &ndash; erobern zum Sieg</div>
-          <div><span class="piece-icon">💣</span> Falle &ndash; vernichtet den Angreifer</div>
+          <div><span class="piece-icon owner-mine"><svg viewBox="0 0 64 64"><use href="#pc-rock"></use></svg></span> Stein schlägt Schere</div>
+          <div><span class="piece-icon owner-mine"><svg viewBox="0 0 64 64"><use href="#pc-scissors"></use></svg></span> Schere schlägt Papier</div>
+          <div><span class="piece-icon owner-mine"><svg viewBox="0 0 64 64"><use href="#pc-paper"></use></svg></span> Papier schlägt Stein</div>
+          <div><span class="piece-icon owner-mine"><svg viewBox="0 0 64 64"><use href="#pc-flag"></use></svg></span> Fahne &ndash; erobern zum Sieg</div>
+          <div><span class="piece-icon owner-mine"><svg viewBox="0 0 64 64"><use href="#pc-trap"></use></svg></span> Falle &ndash; vernichtet den Angreifer</div>
         </div>
         <div id="move-log" class="move-log"></div>
       </div>
@@ -85,6 +160,28 @@
     <h2 id="gameover-title"></h2>
     <p id="gameover-reason"></p>
     <button id="btn-new-game" class="btn btn-primary">Neues Spiel</button>
+  </div>
+</div>
+
+<div id="tiebreak-overlay" class="overlay hidden">
+  <div class="overlay-panel">
+    <h2>Gleichstand!</h2>
+    <p id="tiebreak-info"></p>
+    <div class="tiebreak-choices">
+      <button class="btn tiebreak-btn" data-type="rock">
+        <svg viewBox="0 0 64 64"><use href="#pc-rock"></use></svg>
+        <span>Stein</span>
+      </button>
+      <button class="btn tiebreak-btn" data-type="scissors">
+        <svg viewBox="0 0 64 64"><use href="#pc-scissors"></use></svg>
+        <span>Schere</span>
+      </button>
+      <button class="btn tiebreak-btn" data-type="paper">
+        <svg viewBox="0 0 64 64"><use href="#pc-paper"></use></svg>
+        <span>Papier</span>
+      </button>
+    </div>
+    <p id="tiebreak-status" class="status-text"></p>
   </div>
 </div>
 
