@@ -445,19 +445,21 @@
   function describeMove(view, lastMove) {
     const mine = lastMove.seat === view.seat;
     const who = mine ? 'Du' : 'Gegner';
+    // Verbformen fuer "Du" (2. Pers. Sg.) vs. "Gegner" (3. Pers. Sg.)
+    const v = (duForm, erForm) => (mine ? duForm : erForm);
     switch (lastMove.outcome) {
       case 'move':
-        return `${who} ziehst eine Figur.`;
+        return `${who} ${v('ziehst', 'zieht')} eine Figur.`;
       case 'draw':
-        return `${who} greift an: Gleichstand (${TYPE_LABELS[lastMove.attackerType]} vs. ${TYPE_LABELS[lastMove.defenderType]}) – beide Figuren raus.`;
+        return `${who} ${v('greifst', 'greift')} an: Gleichstand (${TYPE_LABELS[lastMove.attackerType]} vs. ${TYPE_LABELS[lastMove.defenderType]}) – beide Figuren raus.`;
       case 'trap':
-        return `${who} tappt in eine Falle 💣 – die Figur ist raus.`;
+        return `${who} ${v('tappst', 'tappt')} in eine Falle 💣 – die Figur ist raus.`;
       case 'flagCaptured':
-        return `${who === 'Du' ? 'Du hast' : 'Gegner hat'} die Fahne erobert! 🚩`;
+        return `${mine ? 'Du hast' : 'Gegner hat'} die Fahne erobert! 🚩`;
       case 'attackerWins':
-        return `${who} gewinnt: ${TYPE_LABELS[lastMove.attackerType]} schlägt ${TYPE_LABELS[lastMove.defenderType]}.`;
+        return `${who} ${v('gewinnst', 'gewinnt')}: ${TYPE_LABELS[lastMove.attackerType]} schlägt ${TYPE_LABELS[lastMove.defenderType]}.`;
       case 'defenderWins':
-        return `${who === 'Du' ? 'Dein Angriff scheitert' : 'Gegner-Angriff scheitert'}: ${TYPE_LABELS[lastMove.defenderType]} schlägt ${TYPE_LABELS[lastMove.attackerType]}.`;
+        return `${mine ? 'Dein Angriff scheitert' : 'Gegner-Angriff scheitert'}: ${TYPE_LABELS[lastMove.defenderType]} schlägt ${TYPE_LABELS[lastMove.attackerType]}.`;
       default:
         return '';
     }
