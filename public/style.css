@@ -229,12 +229,23 @@ body {
 .cell.move-target { outline: 3px dashed var(--highlight); cursor: pointer; }
 .cell.move-target.attack { outline-color: var(--danger); }
 
-.cell span { display: block; width: 44px; height: 44px; }
+.cell span { display: block; width: 44px; height: 44px; position: relative; }
 .cell span svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
 
-.owner-mine { --body-fill: #2979ff; }
-.owner-opp { --body-fill: #ff5252; }
-.owner-hidden { --body-fill: #9aa5b1; }
+.owner-host { --body-fill: #2979ff; }
+.owner-joiner { --body-fill: #ff5252; }
+
+/* Aufgedeckte Figur: deutlich sichtbarer goldener Glühring, egal wessen Figur */
+.piece-revealed { position: relative; }
+.piece-revealed::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2.5px solid #ffd54f;
+  box-shadow: 0 0 7px 2px rgba(255, 213, 79, 0.85);
+  pointer-events: none;
+}
 
 .game-side { display: flex; flex-direction: column; gap: 10px; }
 

@@ -9,6 +9,18 @@
     return `<svg viewBox="0 0 64 64"><use href="#${id}"></use></svg>`;
   }
 
+  // Feste Teamfarben: Host (Seat A) ist immer blau, Beigetretener (Seat B) immer rot -
+  // unabhaengig davon, aus wessen Sicht gerade gerendert wird.
+  function seatClass(seat) {
+    return seat === 'A' ? 'owner-host' : 'owner-joiner';
+  }
+  function mySeatClass(view) {
+    return seatClass(view.seat);
+  }
+  function oppSeatClass(view) {
+    return seatClass(view.seat === 'A' ? 'B' : 'A');
+  }
+
   // ---------- Sound (synthetisiert per Web Audio API, keine externen Dateien) ----------
   const Sound = (() => {
     let ctx = null;
@@ -291,7 +303,7 @@
       const used = placedCountFor(type);
       const remaining = max - used;
       const item = document.createElement('div');
-      item.className = 'palette-item owner-mine' + (remaining <= 0 ? ' empty' : '') + (selectedPaletteType === type ? ' selected' : '');
+      item.className = 'palette-item ' + mySeatClass(view) + (remaining <= 0 ? ' empty' : '') + (selectedPaletteType === type ? ' selected' : '');
       item.innerHTML = `<span class="icon">${pieceSvg(type)}</span><span class="count">${remaining}/${max}</span>`;
       item.title = TYPE_LABELS[type];
       item.addEventListener('click', () => {
@@ -315,7 +327,7 @@
         cell.className = 'cell own-zone placeable';
         const type = localPlacements[key];
         if (type) {
-          cell.innerHTML = `<span class="owner-mine">${pieceSvg(type)}</span>`;
+          cell.innerHTML = `<span class="${mySeatClass(view)}">${pieceSvg(type)}</span>`;
           cell.title = TYPE_LABELS[type];
         }
         cell.addEventListener('click', () => {
@@ -437,7 +449,7 @@
         cellEl.className = `cell ${zoneClass}`;
 
         if (cellData) {
-          const ownerClass = cellData.owner === view.seat ? 'owner-mine' : (cellData.type === 'hidden' ? 'owner-hidden' : 'owner-opp');
+          const ownerClass = seatClass(cellData.owner) + (cellData.revealed ? ' piece-revealed' : '');
           const span = document.createElement('span');
           span.className = ownerClass;
           span.innerHTML = pieceSvg(cellData.type);
@@ -516,21 +528,23 @@
   function renderPieceTracker(view) {
     if (!trackerEl) return;
     const { mine, opp, mineTotal, oppTotal } = computeCounts(view);
-    const mineChips = ['rock', 'scissors', 'paper'].map((t) => countChip(t, mine[t], 'owner-mine')).join('')
-      + statusChip('flag', mine.flag > 0, 'owner-mine')
-      + statusChip('trap', mine.trap > 0, 'owner-mine');
+    const myClass = mySeatClass(view);
+    const oppClass = oppSeatClass(view);
+    const mineChips = ['rock', 'scissors', 'paper'].map((t) => countChip(t, mine[t], myClass)).join('')
+      + statusChip('flag', mine.flag > 0, myClass)
+      + statusChip('trap', mine.trap > 0, myClass);
     const oppChips = ['rock', 'scissors', 'paper']
       .filter((t) => opp[t] > 0)
-      .map((t) => countChip(t, opp[t], 'owner-opp'))
-      .join('') + (opp.hidden > 0 ? countChip('hidden', opp.hidden, 'owner-hidden') : '');
+      .map((t) => countChip(t, opp[t], oppClass))
+      .join('') + (opp.hidden > 0 ? countChip('hidden', opp.hidden, oppClass) : '');
 
     trackerEl.innerHTML = `
       <div class="tracker-col">
-        <div class="tracker-head"><span class="tracker-dot owner-mine"></span>Du <strong>${mineTotal}</strong></div>
+        <div class="tracker-head"><span class="tracker-dot ${myClass}"></span>Du <strong>${mineTotal}</strong></div>
         <div class="tracker-chips">${mineChips}</div>
       </div>
       <div class="tracker-col">
-        <div class="tracker-head"><span class="tracker-dot owner-opp"></span>Gegner <strong>${oppTotal}</strong></div>
+        <div class="tracker-head"><span class="tracker-dot ${oppClass}"></span>Gegner <strong>${oppTotal}</strong></div>
         <div class="tracker-chips">${oppChips}</div>
       </div>
     `;
