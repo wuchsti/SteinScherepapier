@@ -143,6 +143,12 @@ body {
 
 .hint { color: var(--muted); font-size: 0.9rem; }
 
+.btn-leave {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
 .palette {
   display: flex;
   flex-wrap: wrap;

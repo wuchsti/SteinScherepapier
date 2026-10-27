@@ -154,6 +154,7 @@
       <p>Dein Einladungscode:</p>
       <div class="room-code" id="room-code-display">-----</div>
       <button id="btn-copy-code" class="btn btn-secondary">Code kopieren</button>
+      <button id="btn-cancel-waiting" class="btn btn-secondary">Abbrechen</button>
     </div>
   </section>
 
@@ -161,6 +162,7 @@
   <section id="screen-setup" class="screen hidden">
     <div class="setup-layout">
       <div>
+        <button id="btn-leave-setup" class="btn btn-secondary btn-leave">&larr; Hauptmenü</button>
         <h2>Figuren aufstellen</h2>
         <p class="hint">Wähle eine Figur aus der Palette und klicke auf ein Feld in deiner Zone. Klicke eine platzierte Figur an, um sie zu entfernen.</p>
         <div id="palette" class="palette"></div>
@@ -179,6 +181,7 @@
   <section id="screen-game" class="screen hidden">
     <div class="game-layout">
       <div class="game-side">
+        <button id="btn-leave-game" class="btn btn-secondary btn-leave">&larr; Hauptmenü</button>
         <div id="turn-indicator" class="turn-indicator"></div>
         <div id="connection-indicator" class="connection-indicator"></div>
         <div id="piece-tracker" class="piece-tracker"></div>

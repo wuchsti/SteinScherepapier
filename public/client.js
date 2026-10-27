@@ -215,10 +215,18 @@
     }
   });
 
-  document.getElementById('btn-new-game').addEventListener('click', () => {
+  function leaveToLobby(needsConfirm) {
+    if (needsConfirm && !window.confirm('Spiel wirklich verlassen? Der Fortschritt geht verloren.')) {
+      return;
+    }
     clearSession();
     window.location.reload();
-  });
+  }
+
+  document.getElementById('btn-new-game').addEventListener('click', () => leaveToLobby(false));
+  document.getElementById('btn-cancel-waiting').addEventListener('click', () => leaveToLobby(false));
+  document.getElementById('btn-leave-setup').addEventListener('click', () => leaveToLobby(true));
+  document.getElementById('btn-leave-game').addEventListener('click', () => leaveToLobby(true));
 
   // ---------- Socket lifecycle ----------
   socket.on('connect', () => {
